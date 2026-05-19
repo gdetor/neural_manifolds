@@ -1,0 +1,13 @@
+{
+    "n_type": "rnn",
+    "is_separable": false,
+    "n_neurons": 100,
+    "sparsity": 0.0,
+    "epochs": 10,
+    "lrate": 0.01,
+    "alpha": 1.0,
+    "n_experiments": 4,
+    "batch_size": 64,
+    "mode": "sequential",
+    "directory": "./results/"
+}

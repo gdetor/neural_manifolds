@@ -1,0 +1,13 @@
+{
+    "n_type": "rnn",
+    "is_separable": false,
+    "n_neurons": 100,
+    "sparsity": 0.0,
+    "epochs": 1,
+    "lrate": 0.001,
+    "alpha": 1.0,
+    "n_experiments": 1,
+    "batch_size": 64,
+    "mode": "interleaved",
+    "directory": "./new_results_mnist/"
+}
