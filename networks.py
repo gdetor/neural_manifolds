@@ -272,7 +272,7 @@ class NetMLPMNIST(nn.Module):
         self.fc2 = nn.Linear(hidden_size, hidden_size)
         self.fc3 = nn.Linear(hidden_size, hidden_size)
         self.fc4 = nn.Linear(hidden_size, hidden_size)
-        self.fc5 = nn.Linear(hidden_size, 10)
+        self.fc_out = nn.Linear(hidden_size, 10)
 
         self.act = nn.Tanh()
 
@@ -285,7 +285,7 @@ class NetMLPMNIST(nn.Module):
         out = self.act(self.fc2(out))
         out = self.act(self.fc3(out))
         out = self.act(self.fc4(out))
-        out = self.fc5(out)
+        out = self.fc_out(out)
 
         return (1.0 / self.alpha) * out, None
 

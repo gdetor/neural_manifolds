@@ -1,13 +1,14 @@
 {
-    "n_type": "rnn",
-    "is_separable": false,
+    "n_type": "mlp",
     "n_neurons": 100,
     "sparsity": 0.0,
-    "epochs": 1,
+    "epochs": 100,
     "lrate": 0.001,
     "alpha": 1.0,
-    "n_experiments": 1,
+    "n_experiments": 5,
     "batch_size": 64,
-    "mode": "interleaved",
-    "directory": "./new_results_mnist/"
+    "mode": "sequential",
+    "directory": "./results/classic_mnist",
+    "data_type": "mnist",
+    "freeze_output": true
 }

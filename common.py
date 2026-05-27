@@ -5,9 +5,26 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy.interpolate import griddata
 
+from dataclasses import dataclass
 from typing import Dict, List
 
 activations = {}
+
+
+@dataclass
+class ExperimentConfig:
+    exp_name: str
+    experiment_id: int
+    n_type: str = "mlp"
+    mode: str = "sequential"
+    dir_: str = "./results"
+    lr: float = 1e-3
+    n_neurons: int = 100
+    batch_size: int = 256
+    epochs: int = 10
+    sparsity: float = 0.0
+    alpha: float = 1.0
+    freeze_output: bool = False
 
 
 def pickleObjectWrite(X: Dict or List,
