@@ -285,24 +285,26 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
     accuracy_trace = []
     test_activities = []
     test_labels = []
-    for i in range(10):
-        if i > 4:
-            data = test_mnist
-            task = "MNIST"
-        else:
-            data = test_fmnist
-            task = "F-MNIST"
-        test_tasks.append(task)
-        _, accuracy, activity, inputs, labels, _ = test(
-                net,
-                criterion,
-                data,
-                device,
-                n_type=n_type)
-        accuracy_trace.append(accuracy)
-        test_activities.append(activity)
-        test_labels.append(labels)
-        test_inputs.append(inputs)
+    with torch.random.fork_rng():
+        torch.manual_seed(13)
+        for i in range(10):
+            if i > 4:
+                data = test_mnist
+                task = "MNIST"
+            else:
+                data = test_fmnist
+                task = "F-MNIST"
+            test_tasks.append(task)
+            _, accuracy, activity, inputs, labels, _ = test(
+                    net,
+                    criterion,
+                    data,
+                    device,
+                    n_type=n_type)
+            accuracy_trace.append(accuracy)
+            test_activities.append(activity)
+            test_labels.append(labels)
+            test_inputs.append(inputs)
 
     np.save(name+"_post_train_accuracy_"+str(index),
             np.array(accuracy_trace))
@@ -315,6 +317,9 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                       name+"_tasks_test_sequence_"+str(index)+".pkl")
 
     result = {"experiment_id": index,
+              "n_type": n_type,
+              "mode": mode,
+              "sparsity": sparsity,
               "test accuracy": test_accuracy}
     result_queue.put(result)
 
