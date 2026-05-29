@@ -3,17 +3,50 @@ from tqdm import tqdm
 
 import torch
 from torch import nn
+import torch.multiprocessing as mp
 from torchvision import datasets, transforms
 
 import numpy as np
 
 from networks import NetRNNMNIST, NetMLPMNIST
+from common import ExperimentConfig
 from common import pickleObjectWrite, assignExperimentName
 from common import hook_func, hook_func_ff, taskSelector, activations
 
 device = torch.device("cuda:0")
 
 TEST_BATCH_SIZE = 32
+
+
+def initializeNStoreParameters(name="noname",
+                               n_neurons=100,
+                               sparsity=0.0,
+                               n_type="mlp",
+                               store_mask=False):
+
+    mask = np.random.choice([0, 1],
+                            size=(n_neurons, n_neurons),
+                            p=[sparsity, 1-sparsity])
+    np.save(name+"_mask", mask)
+    mask = torch.from_numpy(mask)
+
+    if n_type == "rnn":
+        net = NetRNNMNIST(
+                input_size=784,
+                n_neurons=n_neurons,
+                output_size=10,
+                num_layers=1,
+                sparsity=sparsity,
+                alpha=1.0,
+                mask=mask,
+                sequence_len=1)
+    elif n_type == "mlp":
+        net = NetMLPMNIST(
+                hidden_size=n_neurons,
+                sparsity=sparsity,
+                alpha=1.0,
+                mask=mask)
+    torch.save(net, name+"_initial_parameters.pt")
 
 
 def test(model, criterion, dataloader, device, n_type="mlp"):
@@ -48,23 +81,74 @@ def test(model, criterion, dataloader, device, n_type="mlp"):
     return loss, accuracy, activity, inputs, labels, true_labels
 
 
-def train(train_mnist,
-          test_mnist,
-          train_fmnist,
-          test_fmnist,
-          name="./results/test_",
-          epochs=50,
-          n_neurons=10,
-          sparsity=0.5,
-          index=0,
-          alpha=1.0,
-          lr=1e-4,
-          mode="sequential",
-          n_type="mlp",
-          mask=None):
+def train(cfg: ExperimentConfig, result_queue: mp.Queue):
+    mode = cfg.mode
+    name = cfg.exp_name
+    epochs = cfg.epochs
+    n_neurons = cfg.n_neurons
+    sparsity = cfg.sparsity
+    index = cfg.experiment_id
+    alpha = cfg.alpha
+    lr = cfg.lr
+    n_type = cfg.n_type
+    batch_size = cfg.batch_size
+    freeze_output = cfg.freeze_output
+    init_params_fname = cfg.init_params_name
+
+    train_kwargs = {'batch_size': batch_size}
+    test_kwargs = {'batch_size': TEST_BATCH_SIZE}
+
+    use_cuda = True
+    if use_cuda:
+        cuda_kwargs = {'num_workers': 1,
+                       'pin_memory': True,
+                       'shuffle': True,
+                       'drop_last': True}
+        train_kwargs.update(cuda_kwargs)
+        test_kwargs.update(cuda_kwargs)
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+        ])
+
+    train_mnist = torch.utils.data.DataLoader(
+            datasets.MNIST(
+                "../data/",
+                train=True,
+                download=True,
+                transform=transform),
+            **train_kwargs
+            )
+
+    test_mnist = torch.utils.data.DataLoader(
+            datasets.MNIST(
+                "../data/",
+                train=False,
+                transform=transform),
+            **test_kwargs
+            )
+
+    train_fmnist = torch.utils.data.DataLoader(
+            datasets.FashionMNIST(
+                "../data/",
+                train=True,
+                download=True,
+                transform=transform),
+            **train_kwargs
+            )
+    test_fmnist = torch.utils.data.DataLoader(
+            datasets.FashionMNIST(
+                "../data/",
+                train=False,
+                transform=transform),
+            **test_kwargs
+            )
 
     print(f"Sparsity = {sparsity}")
     print(f"Neural Network Type: {n_type}")
+
+    mask = torch.from_numpy(np.load(init_params_fname+"_mask.npy"))
     if n_type == "rnn":
         net = NetRNNMNIST(
                 input_size=784,
@@ -74,25 +158,24 @@ def train(train_mnist,
                 sparsity=sparsity,
                 alpha=alpha,
                 mask=mask,
-                sequence_len=1).to(device)
+                sequence_len=1)
     elif n_type == "mlp":
         net = NetMLPMNIST(
                 hidden_size=n_neurons,
                 sparsity=sparsity,
                 alpha=alpha,
-                mask=mask).to(device)
+                mask=mask)
     else:
         raise ValueError("no network type")
 
-    if index == 0:
-        print("Storing initial parameters")
-        torch.save(net, name+"_ic.pt")
-    else:
-        print("Loading initial parameters")
-        tmp_name = name.replace(n_type+"_"+str(index)+"_",
-                                n_type+"_0_")
-        net = torch.load(tmp_name+"_ic.pt",
-                         weights_only=False)
+    net = torch.load(init_params_fname+"_initial_parameters.pt",
+                     weights_only=False)
+    net = net.to(device)
+
+    if freeze_output:
+        print("Freezing parameters of output layer")
+        net.fc_out.weight.requires_grad = False
+        net.fc_out.bias.requires_grad = False
 
     optimizer = torch.optim.AdamW(net.parameters(),
                                   lr=lr,
@@ -182,10 +265,8 @@ def train(train_mnist,
     activities = np.array(activities)
     inputs = np.array(inputs)
 
-    pickleObjectWrite(activities,
-                      name+"_raw_activities_"+str(index)+".pkl")
-    pickleObjectWrite(inputs,
-                      name+"_inputs_"+str(index)+".pkl")
+    np.save(name+"_raw_activities_"+str(index), activities)
+    np.save(name+"_inputs_"+str(index), inputs)
     pickleObjectWrite(labels,
                       name+"_raw_labels_"+str(index)+".pkl")
     pickleObjectWrite(true_labels,
@@ -232,102 +313,71 @@ def train(train_mnist,
     ts = [tasks, test_tasks]
     pickleObjectWrite(ts,
                       name+"_tasks_test_sequence_"+str(index)+".pkl")
-    return net
+
+    result = {"experiment_id": index,
+              "test accuracy": test_accuracy}
+    result_queue.put(result)
 
 
 if __name__ == "__main__":
     with open("parameters_mnist.json") as f:
         params = json.load(f)
 
-    n_type = params["n_type"]
-    batch_size = params["batch_size"]
-    n_experiments = params["n_experiments"]
-    n_neurons = params["n_neurons"]
-    lr = params["lrate"]
-    epochs = params["epochs"]
-    sparsity = params["sparsity"]
-    alpha = params["alpha"]
-    mode = params["mode"]
-    dir_ = params["directory"]
-
-    train_kwargs = {'batch_size': batch_size}
-    test_kwargs = {'batch_size': TEST_BATCH_SIZE}
-
-    use_cuda = True
-    if use_cuda:
-        cuda_kwargs = {'num_workers': 1,
-                       'pin_memory': True,
-                       'shuffle': True,
-                       'drop_last': True}
-        train_kwargs.update(cuda_kwargs)
-        test_kwargs.update(cuda_kwargs)
-
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-        ])
-
-    train_mnist = torch.utils.data.DataLoader(
-            datasets.MNIST(
-                "../data/",
-                train=True,
-                download=True,
-                transform=transform),
-            **train_kwargs
-            )
-
-    test_mnist = torch.utils.data.DataLoader(
-            datasets.MNIST(
-                "../data/",
-                train=False,
-                transform=transform),
-            **test_kwargs
-            )
-
-    train_fmnist = torch.utils.data.DataLoader(
-            datasets.FashionMNIST(
-                "../data/",
-                train=True,
-                download=True,
-                transform=transform),
-            **train_kwargs
-            )
-    test_fmnist = torch.utils.data.DataLoader(
-            datasets.FashionMNIST(
-                "../data/",
-                train=False,
-                transform=transform),
-            **test_kwargs
-            )
-
-    mask = torch.from_numpy(
-            np.random.choice([0, 1],
-                             size=(n_neurons, n_neurons),
-                             p=[sparsity, 1-sparsity])
-            )
-
-    for experiment_id in range(n_experiments):
+    configs = []
+    for experiment_id in range(params["n_experiments"]):
         exp_name = assignExperimentName(
-                dir_,
-                mode,
-                n_type,
-                n_neurons,
-                epochs,
-                sparsity,
+                params["directory"]+"_"+params["data_type"],
+                params["mode"],
+                params["n_type"],
+                params["n_neurons"],
+                params["epochs"],
+                params["sparsity"],
                 experiment_id)
 
-        res = train(
-                train_mnist,
-                test_mnist,
-                train_fmnist,
-                test_fmnist,
-                name=exp_name,
-                epochs=epochs,
-                n_neurons=n_neurons,
-                sparsity=sparsity,
-                index=experiment_id,
-                alpha=alpha,
-                lr=lr,
-                mode=mode,
-                n_type=n_type,
-                mask=mask)
+        name = exp_name.replace("mlp_"+str(experiment_id)+"_neurons",
+                                "mlp_neurons")
+        if experiment_id == 0:
+            initializeNStoreParameters(name=name,
+                                       n_neurons=params["n_neurons"],
+                                       sparsity=params["sparsity"],
+                                       n_type=params["n_type"])
+
+        cfg = ExperimentConfig(
+                exp_name=exp_name,
+                experiment_id=experiment_id,
+                n_type=params["n_type"],
+                mode=params["mode"],
+                dir_=params["directory"],
+                lr=params["lrate"],
+                n_neurons=params["n_neurons"],
+                batch_size=params["batch_size"],
+                epochs=params["epochs"],
+                sparsity=params["sparsity"],
+                alpha=params["alpha"],
+                freeze_output=params["freeze_output"],
+                init_params_name=name
+                )
+        configs.append(cfg)
+
+    mp.set_start_method("spawn", force=True)
+    result_queue: mp.Queue = mp.Queue()
+
+    processes = []
+    # wall_start = time.time()
+    for cfg in configs:
+        p = mp.Process(target=train, args=(cfg, result_queue))
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
+
+    # wall_elapsed = time.time() - wall_start
+
+    # ---- Collect & display results ----
+    results = []
+    while not result_queue.empty():
+        results.append(result_queue.get())
+    results.sort(key=lambda r: r["experiment_id"])
+
+    print(results)

@@ -25,6 +25,7 @@ class ExperimentConfig:
     sparsity: float = 0.0
     alpha: float = 1.0
     freeze_output: bool = False
+    init_params_name: str = "noname"
 
 
 def pickleObjectWrite(X: Dict or List,

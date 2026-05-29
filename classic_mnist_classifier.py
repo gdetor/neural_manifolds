@@ -194,10 +194,8 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
     activities = np.array(activities)
     inputs = np.array(inputs)
 
-    pickleObjectWrite(activities,
-                      name+"_raw_activities_"+str(index)+".pkl")
-    pickleObjectWrite(inputs,
-                      name+"_inputs_"+str(index)+".pkl")
+    np.save(name+"_raw_activities_"+str(index), activities)
+    np.save(name+"_inputs_"+str(index), inputs)
     pickleObjectWrite(labels,
                       name+"_raw_labels_"+str(index)+".pkl")
     pickleObjectWrite(true_labels,
