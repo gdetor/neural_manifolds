@@ -63,6 +63,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
     n_type = cfg.n_type
     batch_size = cfg.batch_size
     freeze_output = cfg.freeze_output
+    data_type = cfg.data_type
 
     train_kwargs = {'batch_size': batch_size}
     test_kwargs = {'batch_size': TEST_BATCH_SIZE}
@@ -81,8 +82,8 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
         transforms.Normalize((0.1307,), (0.3081,))
         ])
 
-    data_type = "mnist"
     if data_type == "mnist":
+        print("Training on MNIST")
         X_train = datasets.MNIST(
                 "../data/",
                 train=True,
@@ -94,6 +95,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                 train=False,
                 transform=transform)
     else:
+        print("Training on FashionMNIST")
         data_type = "fmnist"
 
         X_train = datasets.FashionMNIST(
@@ -226,6 +228,7 @@ if __name__ == "__main__":
                 experiment_id)
 
         cfg = ExperimentConfig(
+                data_type=params["data_type"],
                 exp_name=exp_name,
                 experiment_id=experiment_id,
                 n_type=params["n_type"],

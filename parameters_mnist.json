@@ -1,14 +1,14 @@
 {
-    "n_type": "mlp",
+    "n_type": "rnn",
     "n_neurons": 100,
     "sparsity": 0.0,
-    "epochs": 1,
+    "epochs": 100,
     "lrate": 0.001,
     "alpha": 1.0,
-    "n_experiments": 6,
-    "batch_size": 64,
+    "n_experiments": 5,
+    "batch_size": 128,
     "mode": "sequential",
-    "directory": "./results/classic_mnist_frozen_2hidden",
-    "data_type": "mnist",
-    "freeze_output": false
+    "directory": "./results/classic_mnist_frozen",
+    "data_type": "fmnist",
+    "freeze_output": true
 }

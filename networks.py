@@ -88,7 +88,7 @@ class NetRNNMNIST(nn.Module):
         self.hidden_size = n_neurons
 
         self.fc_in = nn.Linear(input_size, n_neurons)
-        self.fc1 = nn.Linear(n_neurons, n_neurons)
+        # self.fc1 = nn.Linear(n_neurons, n_neurons)
         self.fc_out = nn.Linear(n_neurons * sequence_len,
                                 output_size,
                                 bias=True)
@@ -103,8 +103,8 @@ class NetRNNMNIST(nn.Module):
         nn.init.constant_(self.rnn.bias_hh_l0, 0.0)
         nn.init.constant_(self.rnn.bias_ih_l0, 0.0)
         nn.init.xavier_normal_(self.fc_out.weight)
-        nn.init.xavier_normal_(self.fc1.weight,
-                               gain=nn.init.calculate_gain("tanh"))
+        # nn.init.xavier_normal_(self.fc1.weight,
+        #                        gain=nn.init.calculate_gain("tanh"))
         nn.init.xavier_normal_(self.fc_in.weight,
                                gain=nn.init.calculate_gain("tanh"))
 
@@ -121,10 +121,11 @@ class NetRNNMNIST(nn.Module):
         x = x.reshape(-1, 784)
         out = self.act(self.fc_in(x))
         out, hn = self.rnn(out.unsqueeze(1), hn)
-        out = self.act(self.fc1(
-            hn.reshape(bs, self.num_layers * self.hidden_size))
-                       )
-        out = self.fc_out(out)
+        # out = self.act(self.fc1(
+        #     hn.reshape(bs, self.num_layers * self.hidden_size))
+        #                )
+        hn = hn.reshape(bs, self.num_layers * self.hidden_size)
+        out = self.fc_out(hn)
         return (1.0 / self.alpha) * out, hn
 
 

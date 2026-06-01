@@ -13,6 +13,7 @@ activations = {}
 
 @dataclass
 class ExperimentConfig:
+    data_type: str
     exp_name: str
     experiment_id: int
     n_type: str = "mlp"
