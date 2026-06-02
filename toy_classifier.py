@@ -119,7 +119,7 @@ def train(m_trainData,
             task = "Circles"
         tasks.append(task)
         if e == 0:
-            _, _, activity, input, label, true_labels = test(
+            _, _, activity, input, label, tl = test(
                     net,
                     criterion,
                     test_dataloader,
@@ -128,7 +128,7 @@ def train(m_trainData,
             activities.append(activity)
             labels.append(label)
             inputs.append(input)
-            true_labels.append(true_labels)
+            true_labels.append(tl)
         else:
             running_loss = []
             net.train()

@@ -1,5 +1,5 @@
 {
-    "n_type": "rnn",
+    "n_type": "mlp",
     "n_neurons": 100,
     "sparsity": 0.0,
     "epochs": 100,
@@ -7,8 +7,8 @@
     "alpha": 1.0,
     "n_experiments": 5,
     "batch_size": 128,
-    "mode": "sequential",
-    "directory": "./results/classic_mnist_frozen",
-    "data_type": "fmnist",
+    "mode": "interleaved",
+    "directory": "./results/mnist_frozen",
+    "data_type": "mnist",
     "freeze_output": true
 }

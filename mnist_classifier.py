@@ -27,7 +27,7 @@ def initializeNStoreParameters(name="noname",
     mask = np.random.choice([0, 1],
                             size=(n_neurons, n_neurons),
                             p=[sparsity, 1-sparsity])
-    np.save(name+"_mask", mask)
+    np.save(name+"_"+n_type+"_mask", mask)
     mask = torch.from_numpy(mask)
 
     if n_type == "rnn":
@@ -148,7 +148,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
     print(f"Sparsity = {sparsity}")
     print(f"Neural Network Type: {n_type}")
 
-    mask = torch.from_numpy(np.load(init_params_fname+"_mask.npy"))
+    mask = torch.from_numpy(np.load(init_params_fname+"_"+n_type+"_mask.npy"))
     if n_type == "rnn":
         net = NetRNNMNIST(
                 input_size=784,
@@ -199,7 +199,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
             task = "F-MNIST"
         tasks.append(task)
         if e == 0:
-            _, _, activity, input, label, true_labels = test(
+            _, _, activity, input, label, tl = test(
                     net,
                     criterion,
                     test_dataloader,
@@ -208,7 +208,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
             activities.append(activity)
             labels.append(label)
             inputs.append(input)
-            true_labels.append(true_labels)
+            true_labels.append(tl)
         else:
             running_loss = []
             net.train()
@@ -339,8 +339,12 @@ if __name__ == "__main__":
                 params["sparsity"],
                 experiment_id)
 
-        name = exp_name.replace("mlp_"+str(experiment_id)+"_neurons",
-                                "mlp_neurons")
+        if params["n_type"] == "mlp":
+            name = exp_name.replace("mlp_"+str(experiment_id)+"_neurons",
+                                    "mlp_neurons")
+        else:
+            name = exp_name.replace("rnn_"+str(experiment_id)+"_neurons",
+                                    "rnn_neurons")
         if experiment_id == 0:
             initializeNStoreParameters(name=name,
                                        n_neurons=params["n_neurons"],
@@ -349,6 +353,7 @@ if __name__ == "__main__":
 
         cfg = ExperimentConfig(
                 exp_name=exp_name,
+                data_type=params["data_type"],
                 experiment_id=experiment_id,
                 n_type=params["n_type"],
                 mode=params["mode"],

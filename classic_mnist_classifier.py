@@ -151,7 +151,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
     test_loss, test_accuracy = [], []
     for e in tqdm(range(epochs+1)):
         if e == 0:
-            _, _, activity, input, label, true_labels = test(
+            _, _, activity, input, label, tl = test(
                     net,
                     criterion,
                     test_dataloader,
@@ -160,7 +160,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
             activities.append(activity)
             labels.append(label)
             inputs.append(input)
-            true_labels.append(true_labels)
+            true_labels.append(tl)
         else:
             running_loss = []
             net.train()
