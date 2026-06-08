@@ -111,7 +111,7 @@ def parallel_permutation_test(sample1: np.ndarray,
 
 if __name__ == "__main__":
     # Choose a task: toy (circles/moons) or mnist
-    task = "toy"
+    task = "mnist"
     # Load the parameters of the experiment
     if task == "toy":
         with open("parameters.json") as f:
@@ -133,8 +133,7 @@ if __name__ == "__main__":
     output_dir = "./tda_results/"
 
     # We test for the following connectivity sparsity conditions
-    # sparsity = [0.0, 0.3]
-    sparsity = [0.0]
+    sparsity = [0.0, 0.3]
 
     # --------------------------------------------------------------------
     # Initialize all the necesary Numpy arrays
@@ -154,7 +153,7 @@ if __name__ == "__main__":
 
         # Load the data for the SEQUENTIAL learning schedule
         R1_seq, T1_seq, R2_seq, T2_seq = loadData(
-                dir_=dir_,
+                dir_=dir_+"_"+params["data_type"],
                 task=task,
                 mode="sequential",
                 n_type=n_type,
@@ -165,7 +164,7 @@ if __name__ == "__main__":
 
         # Load the data for the INTERLEAVED learning schedule
         R1_int, T1_int, R2_int, T2_int = loadData(
-                dir_=dir_,
+                dir_=dir_+"_"+params["data_type"],
                 task=task,
                 mode="interleaved",
                 n_type=n_type,

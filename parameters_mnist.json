@@ -2,13 +2,13 @@
     "n_type": "mlp",
     "n_neurons": 100,
     "sparsity": 0.0,
-    "epochs": 100,
+    "epochs": 50,
     "lrate": 0.001,
-    "alpha": 1.0,
+    "alpha": 1.5,
     "n_experiments": 5,
     "batch_size": 128,
     "mode": "interleaved",
-    "directory": "./results/mnist_frozen",
+    "directory": "./results/classic_alpha_frozen",
     "data_type": "mnist",
     "freeze_output": true
 }

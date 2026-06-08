@@ -30,8 +30,8 @@ letters2 = ["C", "D"]
 # **********************************************************************
 #       THE USER SHOULD SET THE FOLLOWING VALUES ACCORDINGLY
 
-metric = "intersections"
-task = "toy"
+metric = "jaccard"
+task = "mnist"
 dir_ = "./convex_hull_results/"
 
 with open("parameters.json") as f:
@@ -54,7 +54,6 @@ n_cases = n_labels * 6
 
 # Values of connectivity sparsity for which we test for
 sparsity = [0.0, 0.3]
-sparsity = [0.0]
 
 
 fig = plt.figure(figsize=(13, 8))

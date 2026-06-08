@@ -16,9 +16,13 @@ ccolor = ["#cecece",
 
 # **********************************************************************
 #       THE USER SHOULD SET THE FOLLOWING VALUES ACCORDINGLY
-exp_type = "toy"
-with open("parameters.json") as f:
-    params = json.load(f)
+exp_type = "mnist"
+if exp_type == "toy":
+    with open("parameters.json") as f:
+        params = json.load(f)
+else:
+    with open("parameters_mnist.json") as f:
+        params = json.load(f)
 
 n_type = params["n_type"]
 n_experiments = params["n_experiments"]
@@ -32,11 +36,11 @@ labels = ["Seq A - Seq B",
           "Seq A - Inter A",
           "Inter A - Inter B"]
 
-pvals0 = np.load(dir_+"pvals0"+exp_type+"_"+n_type+".npy")
-pvals1 = np.load(dir_+"pvals1"+exp_type+"_"+n_type+".npy")
+pvals0 = np.load(dir_+"pvals0"+"_"+exp_type+"_"+n_type+".npy")
+pvals1 = np.load(dir_+"pvals1"+"_"+exp_type+"_"+n_type+".npy")
 
-bottle0 = np.load(dir_+"bdist0"+exp_type+"_"+n_type+".npy")
-bottle1 = np.load(dir_+"bdist1"+exp_type+"_"+n_type+".npy")
+bottle0 = np.load(dir_+"bdist0"+"_"+exp_type+"_"+n_type+".npy")
+bottle1 = np.load(dir_+"bdist1"+"_"+exp_type+"_"+n_type+".npy")
 
 # Values of connectivity sparsity for which we test for
 sparsity = [0.0, 0.3]

@@ -81,6 +81,11 @@ def test(model, criterion, dataloader, device, n_type="mlp"):
     return loss, accuracy, activity, inputs, labels, true_labels
 
 
+def get_flat_params(model):
+    return torch.cat([p.data.view(-1)
+                      for p in model.parameters()]).cpu().numpy().copy()
+
+
 def train(cfg: ExperimentConfig, result_queue: mp.Queue):
     mode = cfg.mode
     name = cfg.exp_name
@@ -184,6 +189,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
 
     weight = []
     tasks = []
+    checkpoints = []
     train_loss = []
     activities, inputs, labels, true_labels = [], [], [], []
     test_loss, test_accuracy, test_accuracy1, test_accuracy2 = [], [], [], []
@@ -257,10 +263,13 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                         device,
                         n_type=n_type)
                 test_accuracy2.append(accuracy)
+        if e % 2 == 0:
+            checkpoints.append(get_flat_params(net))
+
         if n_type == "rnn":
             weight.append(net.rnn.weight_hh_l0.detach().cpu().numpy())
         if n_type == "mlp":
-            weight.append(net.fc2.weight.detach().cpu().numpy())
+            weight.append(net.fc4.weight.detach().cpu().numpy())
 
     activities = np.array(activities)
     inputs = np.array(inputs)
@@ -271,6 +280,8 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                       name+"_raw_labels_"+str(index)+".pkl")
     pickleObjectWrite(true_labels,
                       name+"_true_labels_"+str(index)+".pkl")
+    pickleObjectWrite(checkpoints,
+                      name+"_checkpoints_"+str(index)+".pkl")
 
     np.save(name+"_train_loss_"+str(index), train_loss)
     np.save(name+"_test_loss_"+str(index), test_loss)

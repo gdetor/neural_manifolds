@@ -23,7 +23,7 @@ def test(model, criterion, dataloader, device, n_type="mlp"):
     if n_type == "rnn":
         handler = model.rnn.register_forward_hook(hook_func)
     elif n_type == "mlp":
-        handler = model.fc2.register_forward_hook(hook_func_ff)
+        handler = model.fc4.register_forward_hook(hook_func_ff)
     else:
         raise ValueError("network type not found")
     model.eval()
@@ -49,6 +49,11 @@ def test(model, criterion, dataloader, device, n_type="mlp"):
     accuracy /= (32 * len(dataloader))
     handler.remove()
     return loss, accuracy, activity, inputs, labels, true_labels
+
+
+def get_flat_params(model):
+    return torch.cat([p.data.view(-1)
+                      for p in model.parameters()]).cpu().numpy().copy()
 
 
 def train(cfg: ExperimentConfig, result_queue: mp.Queue):
@@ -146,6 +151,8 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                                   )
     criterion = nn.CrossEntropyLoss()
 
+    weight = []
+    checkpoints = []
     train_loss = []
     activities, inputs, labels, true_labels = [], [], [], []
     test_loss, test_accuracy = [], []
@@ -172,6 +179,7 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                 yhat, _ = net(x)
 
                 loss = criterion(yhat, y)
+                loss *= 1./alpha**2
                 loss.backward()
                 optimizer.step()
 
@@ -192,16 +200,26 @@ def train(cfg: ExperimentConfig, result_queue: mp.Queue):
                 labels.append(label)
                 inputs.append(input)
                 true_labels.append(tl)
+        if e % 2 == 0:
+            checkpoints.append(get_flat_params(net))
+
+        if n_type == "rnn":
+            weight.append(net.rnn.weight_hh_l0.detach().cpu().numpy())
+        if n_type == "mlp":
+            weight.append(net.fc4.weight.detach().cpu().numpy())
 
     activities = np.array(activities)
     inputs = np.array(inputs)
 
+    np.save(name+"_weights_"+str(index), np.array(weight))
     np.save(name+"_raw_activities_"+str(index), activities)
     np.save(name+"_inputs_"+str(index), inputs)
     pickleObjectWrite(labels,
                       name+"_raw_labels_"+str(index)+".pkl")
     pickleObjectWrite(true_labels,
                       name+"_true_labels_"+str(index)+".pkl")
+    pickleObjectWrite(checkpoints,
+                      name+"_checkpoints_"+str(index)+".pkl")
 
     np.save(name+"_train_loss_"+str(index), train_loss)
     np.save(name+"_test_loss_"+str(index), test_loss)

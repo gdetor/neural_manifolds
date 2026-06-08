@@ -191,7 +191,7 @@ def convexHullIntersectionPoints(
 
 if __name__ == "__main__":
     # Choose a task: toy (circles/moons) or mnist
-    task = "toy"
+    task = "mnist"
     # Load the parameters of the experiment
     if task == "toy":
         with open("parameters.json") as f:
@@ -200,6 +200,7 @@ if __name__ == "__main__":
         with open("parameters_mnist.json") as f:
             params = json.load(f)
 
+    data_type = params["data_type"]
     n_type = params["n_type"]
     batch_size = params["batch_size"]
     n_experiments = params["n_experiments"]
@@ -213,7 +214,6 @@ if __name__ == "__main__":
     output_dir = "./convex_hull_results/"
 
     sparsity = [0.0, 0.3]
-    sparsity = [0.0]
 
     # Initialize all the necesary Numpy arrays
     # Intersection points and Jaccard index
@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
         # Run the TDA analysis for each sparsity value
         R1_seq, T1_seq, R2_seq, T2_seq = loadData(
-                dir_=dir_,
+                dir_=dir_+"_"+data_type,
                 task=task,
                 mode="sequential",
                 n_type=n_type,
@@ -237,7 +237,7 @@ if __name__ == "__main__":
 
         # Load the data for the INTERLEAVED learning schedule
         R1_int, T1_int, R2_int, T2_int = loadData(
-                dir_=dir_,
+                dir_=dir_+"_"+data_type,
                 task=task,
                 mode="interleaved",
                 n_type=n_type,

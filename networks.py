@@ -202,7 +202,7 @@ class NetMLPMNIST(nn.Module):
         out = self.act(self.fc4(out))
         out = self.fc_out(out)
 
-        return (1.0 / self.alpha) * out, None
+        return self.alpha * out, None
 
     def _apply_pruning(self, sparsity):
         if self.mask is None:

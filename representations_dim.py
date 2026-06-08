@@ -25,17 +25,16 @@ if __name__ == "__main__":
     # -------------------------------------------
     # Change the following based on the problem
     # Choose a task: toy (circles/moons) or mnist
-    task = "toy"
-    n_type = "rnn"
+    data_type = "mnist"
+    n_type = "mlp"
     # Load the parameters of the experiment
-    if task == "toy":
+    if data_type in ["toy", "circles", "moons"]:
         with open("parameters.json") as f:
             params = json.load(f)
     else:
         with open("parameters_mnist.json") as f:
             params = json.load(f)
 
-    n_type = params["n_type"]
     batch_size = params["batch_size"]
     n_experiments = params["n_experiments"]
     n_neurons = params["n_neurons"]
@@ -46,8 +45,8 @@ if __name__ == "__main__":
     dir_ = params["directory"]
     # ----------------------------------------
 
-    sparsity = [0.0, 0.3, 0.5, 0.8]
-    sparsity = [0.0]
+    # sparsity = [0.0, 0.3, 0.5, 0.8]
+    sparsity = [0.0, 0.5]
 
     # Load the neural activities from pickled files
     seq_pr, int_pr = [], []
@@ -58,7 +57,7 @@ if __name__ == "__main__":
             R, T = [], []
             for i in range(n_experiments):
                 exp_name = assignExperimentName(
-                        directory=dir_,
+                        directory=dir_+"_"+data_type,
                         mode=mode,
                         n_type=n_type,
                         n_neurons=n_neurons,
