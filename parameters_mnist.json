@@ -8,7 +8,7 @@
     "n_experiments": 5,
     "batch_size": 128,
     "mode": "interleaved",
-    "directory": "./results/classic_alpha_frozen",
+    "directory": "./results/frozen",
     "data_type": "mnist",
     "freeze_output": true
 }
