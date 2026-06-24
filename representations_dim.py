@@ -25,18 +25,23 @@ if __name__ == "__main__":
     # -------------------------------------------
     # Change the following based on the problem
     # Choose a task: toy (circles/moons) or mnist
-    data_type = "mnist"
+    data_type = "cifar"
     n_type = "mlp"
     # Load the parameters of the experiment
     if data_type in ["toy", "circles", "moons"]:
         with open("parameters.json") as f:
             params = json.load(f)
+    elif data_type == "cifar":
+        with open("parameters_cifar100.json") as f:
+            params = json.load(f)
+        n_type = "vit"
     else:
         with open("parameters_mnist.json") as f:
             params = json.load(f)
 
     batch_size = params["batch_size"]
-    n_experiments = params["n_experiments"]
+    # n_experiments = params["n_experiments"]
+    n_experiments = 5
     n_neurons = params["n_neurons"]
     lr = params["lrate"]
     epochs = params["epochs"]
@@ -46,7 +51,9 @@ if __name__ == "__main__":
     # ----------------------------------------
 
     # sparsity = [0.0, 0.3, 0.5, 0.8]
-    sparsity = [0.0, 0.5]
+    # sparsity = [0.0, 0.5]
+    sparsity = [0.0]
+    tgt1, tgt2 = 11, 23
 
     # Load the neural activities from pickled files
     seq_pr, int_pr = [], []
@@ -56,6 +63,10 @@ if __name__ == "__main__":
             acc1, acc2 = [], []
             R, T = [], []
             for i in range(n_experiments):
+                if data_type == "cifar":
+                    index = i + 1
+                else:
+                    index = i
                 exp_name = assignExperimentName(
                         directory=dir_+"_"+data_type,
                         mode=mode,
@@ -65,30 +76,57 @@ if __name__ == "__main__":
                         sparsity=sp,
                         index=i)
 
-                activities = np.load(
-                        exp_name+"_test_activities_"+str(i)+".npy"
-                        )
+                if data_type == "cifar":
+                    fname1 = exp_name+"_test_activities_"+str(i+1)+"_"+str(tgt1)+".npy"
+                    fname2 = exp_name+"_test_activities_"+str(i+1)+"_"+str(tgt2)+".npy"
+                    activities1 = np.load(fname1)
+                    activities2 = np.load(fname2)
 
-                _, p, q, s = activities.shape
-                tmp_r = np.vstack([activities[0].reshape(p*q, s),
-                                   activities[8].reshape(p*q, s)])
-                R.append(tmp_r)
+                    assert activities1.shape == activities2.shape
+                    p, q, r, s = activities1.shape
+                    tmp_r = np.vstack(
+                            [activities1[:, :, 0, :].reshape(p*q, s),
+                             activities2[:, :, 0, :].reshape(p*q, s)
+                            ]
+                            )
+                    
+                    R.append(tmp_r)
 
-                targets = np.load(exp_name+"_test_labels_"+str(i)+".npy")
-                _, p, q = targets.shape
-                tmp_t = np.vstack([targets[0].reshape(p*q, 1),
-                                   targets[8].reshape(p*q, 1)])
-                T.append(tmp_t)
+                    fname1 = exp_name+"_test_labels_"+str(i+1)+"_"+str(tgt1)+".npy"
+                    fname2 = exp_name+"_test_labels_"+str(i+1)+"_"+str(tgt2)+".npy"
+                    targets1 = np.load(fname1)
+                    targets2 = np.load(fname2)
 
-                acc1.append(np.load(exp_name+"_test_accuracy1_"+str(i)+".npy"))
-                acc2.append(np.load(exp_name+"_test_accuracy2_"+str(i)+".npy"))
+                    assert targets1.shape == targets2.shape
+                    p, q, r = targets1.shape
+                    tmp_t = np.vstack([targets1.reshape(p*q, r),
+                                       targets2.reshape(p*q, r)])
+                    T.append(tmp_t)
+                else:
+                    fname = exp_name+"_test_activities_"+str(i)+".npy"
+                    activities = np.load(fname)
+
+                    _, p, q, s = activities.shape
+                    tmp_r = np.vstack([activities[0].reshape(p*q, s),
+                                       activities[8].reshape(p*q, s)])
+                    R.append(tmp_r)
+
+                    targets = np.load(exp_name+"_test_labels_"+str(i)+".npy")
+                    _, p, q = targets.shape
+                    tmp_t = np.vstack([targets[0].reshape(p*q, 1),
+                                       targets[8].reshape(p*q, 1)])
+                    T.append(tmp_t)
+
+                    acc1.append(np.load(exp_name+"_test_accuracy1_"+str(i)+".npy"))
+                    acc2.append(np.load(exp_name+"_test_accuracy2_"+str(i)+".npy"))
 
             R = np.array(R)
             T = np.array(T).astype('i')[:, :, 0]
             n_samples = R.shape[1]
 
-            acc1 = np.array(acc1)
-            acc2 = np.array(acc2)
+            if data_type != "cifar100":
+                acc1 = np.array(acc1)
+                acc2 = np.array(acc2)
 
             # ------------------------------------------------------------
             #

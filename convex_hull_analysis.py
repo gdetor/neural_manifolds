@@ -191,19 +191,26 @@ def convexHullIntersectionPoints(
 
 if __name__ == "__main__":
     # Choose a task: toy (circles/moons) or mnist
-    task = "mnist"
+    task = "cifar"
     # Load the parameters of the experiment
     if task == "toy":
         with open("parameters.json") as f:
             params = json.load(f)
+            tgt1, tgt2 = 0, 8
+    elif task == "cifar":
+        with open("parameters_cifar100.json") as f:
+            params = json.load(f)
+            tgt1, tgt2 = 11, 23
     else:
         with open("parameters_mnist.json") as f:
             params = json.load(f)
+            tgt1, tgt2 = 0, 8
 
     data_type = params["data_type"]
     n_type = params["n_type"]
     batch_size = params["batch_size"]
-    n_experiments = params["n_experiments"]
+    # n_experiments = params["n_experiments"]
+    n_experiments = 5
     n_neurons = params["n_neurons"]
     lr = params["lrate"]
     epochs = params["epochs"]
@@ -213,7 +220,8 @@ if __name__ == "__main__":
 
     output_dir = "./convex_hull_results/"
 
-    sparsity = [0.0, 0.3]
+    # sparsity = [0.0, 0.3]
+    sparsity = [0.0]
 
     # Initialize all the necesary Numpy arrays
     # Intersection points and Jaccard index
@@ -233,7 +241,9 @@ if __name__ == "__main__":
                 sparsity=sp,
                 n_experiments=n_experiments,
                 epochs=epochs,
-                n_neurons=n_neurons)
+                n_neurons=n_neurons,
+                target1=tgt1,
+                target2=tgt2)
 
         # Load the data for the INTERLEAVED learning schedule
         R1_int, T1_int, R2_int, T2_int = loadData(
@@ -244,7 +254,9 @@ if __name__ == "__main__":
                 sparsity=sp,
                 n_experiments=n_experiments,
                 epochs=epochs,
-                n_neurons=n_neurons)
+                n_neurons=n_neurons,
+                target1=tgt1,
+                target2=tgt2)
 
         # Pack all the responses, R, and targets, T, into lists
         R = [R1_seq, R2_seq, R1_int, R2_int]

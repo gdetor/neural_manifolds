@@ -90,16 +90,16 @@ def parallel_permutation_test(sample1: np.ndarray,
     """
     d_obs = gd.bottleneck_distance(sample1, sample2)
 
+    n = len(sample1)
     combined = np.concatenate([sample1, sample2])
-    n1 = len(sample1)
 
-    def compute_single_bottleneck(combined, n1):
+    def compute_single_bottleneck(combined, n):
         shuffled = np.random.permutation(combined)
-        resample1 = shuffled[:n1]
-        resample2 = shuffled[n1:]
+        resample1 = shuffled[:n]
+        resample2 = shuffled[n:]
         return gd.bottleneck_distance(resample1, resample2)
 
-    args = [(combined, n1) for _ in range(n_resamples)]
+    args = [(combined, n) for _ in range(n_resamples)]
 
     with Pool(n_jobs) as pool:
         null_distances = pool.starmap(compute_single_bottleneck, args)
@@ -111,18 +111,25 @@ def parallel_permutation_test(sample1: np.ndarray,
 
 if __name__ == "__main__":
     # Choose a task: toy (circles/moons) or mnist
-    task = "mnist"
+    task = "cifar"
     # Load the parameters of the experiment
     if task == "toy":
         with open("parameters.json") as f:
             params = json.load(f)
+            tgt1, tgt2 = 0, 8
+    elif task == "cifar":
+        with open("parameters_cifar100.json") as f:
+            params = json.load(f)
+            tgt1, tgt2 = 11, 23
     else:
         with open("parameters_mnist.json") as f:
             params = json.load(f)
+            tgt1, tgt2 = 0, 8
 
     n_type = params["n_type"]
     batch_size = params["batch_size"]
-    n_experiments = params["n_experiments"]
+    # n_experiments = params["n_experiments"]
+    n_experiments = 5
     n_neurons = params["n_neurons"]
     lr = params["lrate"]
     epochs = params["epochs"]
@@ -133,7 +140,8 @@ if __name__ == "__main__":
     output_dir = "./tda_results/"
 
     # We test for the following connectivity sparsity conditions
-    sparsity = [0.0, 0.3]
+    # sparsity = [0.0, 0.3]
+    sparsity = [0.0]
 
     # --------------------------------------------------------------------
     # Initialize all the necesary Numpy arrays
@@ -160,7 +168,9 @@ if __name__ == "__main__":
                 sparsity=sp,
                 n_experiments=n_experiments,
                 epochs=epochs,
-                n_neurons=n_neurons)
+                n_neurons=n_neurons,
+                target1=tgt1,
+                target2=tgt2)
 
         # Load the data for the INTERLEAVED learning schedule
         R1_int, T1_int, R2_int, T2_int = loadData(
@@ -171,7 +181,9 @@ if __name__ == "__main__":
                 sparsity=sp,
                 n_experiments=n_experiments,
                 epochs=epochs,
-                n_neurons=n_neurons)
+                n_neurons=n_neurons,
+                target1=tgt1,
+                target2=tgt2)
 
         # Pack all the responses, R, and targets, T, into lists
         R = [R1_seq, R2_seq, R1_int, R2_int]
@@ -247,7 +259,8 @@ if __name__ == "__main__":
 
                 # Compute the bottleneck distances and the p-values
                 # bdistH0 = gd.bottleneck_distance(hA0, hB0)
-                pvalue, bdistH0 = parallel_permutation_test(
+                # pvalue = 0.04
+                bdistH0, pvalue = parallel_permutation_test(
                         hA0,
                         hB0,
                         n_resamples=1000,
@@ -256,7 +269,8 @@ if __name__ == "__main__":
                 pvals_0[k, i, j] = pvalue
 
                 # bdistH1 = gd.bottleneck_distance(hA1, hB1)
-                pvalue, bdistH1 = parallel_permutation_test(
+                # pvalue = 0.04
+                bdistH1, pvalue = parallel_permutation_test(
                         hA1,
                         hB1,
                         n_resamples=1000,

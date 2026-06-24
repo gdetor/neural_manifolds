@@ -16,16 +16,20 @@ ccolor = ["#cecece",
 
 # **********************************************************************
 #       THE USER SHOULD SET THE FOLLOWING VALUES ACCORDINGLY
-exp_type = "mnist"
+exp_type = "cifar"
 if exp_type == "toy":
     with open("parameters.json") as f:
+        params = json.load(f)
+elif exp_type == "cifar":
+    with open("parameters_cifar100.json") as f:
         params = json.load(f)
 else:
     with open("parameters_mnist.json") as f:
         params = json.load(f)
 
 n_type = params["n_type"]
-n_experiments = params["n_experiments"]
+# n_experiments = params["n_experiments"]
+n_experiments = 5
 dir_ = "./tda_results/"
 
 
@@ -43,7 +47,8 @@ bottle0 = np.load(dir_+"bdist0"+"_"+exp_type+"_"+n_type+".npy")
 bottle1 = np.load(dir_+"bdist1"+"_"+exp_type+"_"+n_type+".npy")
 
 # Values of connectivity sparsity for which we test for
-sparsity = [0.0, 0.3]
+# sparsity = [0.0, 0.3]
+sparsity = [0.0]
 
 # Plot nuances
 letters1 = ["A", "B"]
@@ -77,6 +82,7 @@ def barPlot(dist, ax):
 fig = plt.figure(figsize=(13, 8))
 fig.suptitle(exp_type.upper()+" "+n_type.upper(), fontsize=14)
 
+case = ["Seq-Seq", "Seq-Int", "Int-Seq", "Int-Int"]
 for k, _ in enumerate(sparsity):
     ax1 = fig.add_subplot(2, 2, k+1)
     ax2 = fig.add_subplot(2, 2, k+3)
@@ -86,10 +92,12 @@ for k, _ in enumerate(sparsity):
     for i in range(4):
         dist0, dist1 = [], []
         for j in range(n_experiments):
-            if pvals0[k, i, j] > 0.05:
+            print(f"Case: {case[i]}, Experiment: {j}, dist = {bottle0[k, i, j]}")
+            print(f"Case: {case[i]}, Experiment: {j}, p-value = {pvals0[k, i, j]}")
+            if pvals0[k, i, j] < 0.05:
                 if np.isfinite(bottle0[k, i, j]):
                     dist0.append(bottle0[k, i, j])
-            if pvals1[k, i, j] > 0.05:
+            if pvals1[k, i, j] < 0.05:
                 if np.isfinite(bottle1[k, i, j]):
                     dist1.append(bottle1[k, i, j])
         dist0 = np.array(dist0)

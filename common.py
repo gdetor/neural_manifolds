@@ -214,7 +214,9 @@ def loadData(dir_: str = "./results/",
              sparsity: float = 0.0,
              n_experiments: int = 5,
              epochs: int = 100,
-             n_neurons: int = 100) -> tuple[np.ndarray, ...]:
+             n_neurons: int = 100,
+             target1: int = 0,
+             target2: int = 8) -> tuple[np.ndarray, ...]:
     """
     Loads the data (neurons preactivations and networks responses) from files.
     It stores the data into numpy arrays and returns a tuple that contains the
@@ -235,11 +237,15 @@ def loadData(dir_: str = "./results/",
     tuple[numpy arrays], the neurons preactivations and network outputs to
     subtask A and subtask B.
     """
-
+    print(f"Targets: {target1}, {target2}")
     # R holds the preactivations, T holds the y_hat (network responses)
     R1, T1 = [], []
     R2, T2 = [], []
     for i in range(n_experiments):
+        if task == "cifar":
+            index = i + 1
+        else:
+            index = i
         exp_name = assignExperimentName(
                 dir_,
                 mode,
@@ -247,20 +253,41 @@ def loadData(dir_: str = "./results/",
                 n_neurons,
                 epochs,
                 sparsity,
-                i)
+                index)
 
-        activities = np.load(
-                exp_name+"_test_activities_"+str(i)+".npy"
-                )
-        # Task A & Taks B
-        _, p, q, s = activities.shape
-        R1.append(activities[0].reshape(p*q, s))
-        R2.append(activities[8].reshape(p*q, s))
+        if task == "cifar":
+            fname1 = exp_name+"_test_activities_"+str(i+1)+"_"+str(target1)+".npy"
+            fname2 = exp_name+"_test_activities_"+str(i+1)+"_"+str(target2)+".npy"
+            activities1 = np.load(fname1)
+            activities2 = np.load(fname2)
 
-        targets = np.load(exp_name+"_test_labels_"+str(i)+".npy")
-        _, p, q = targets.shape
-        T1.append(targets[0].reshape(p*q, 1))
-        T2.append(targets[8].reshape(p*q, 1))
+            assert activities1.shape == activities2.shape
+            p, q, r, s = activities1.shape
+            R1.append(activities1[:, :, 0, :].reshape(p*q, s))
+            R2.append(activities2[:, :, 0, :].reshape(p*q, s))
+            
+            fname1 = exp_name+"_test_labels_"+str(i+1)+"_"+str(target1)+".npy"
+            fname2 = exp_name+"_test_labels_"+str(i+1)+"_"+str(target2)+".npy"
+            targets1 = np.load(fname1)
+            targets2 = np.load(fname2)
+
+            assert targets1.shape == targets2.shape
+            p, q, r = targets1.shape
+            T1.append(targets1.reshape(p*q, r))
+            T2.append(targets2.reshape(p*q, r))
+        else:
+            activities = np.load(
+                    exp_name+"_test_activities_"+str(i)+".npy"
+                    )
+            # Task A & Taks B
+            _, p, q, s = activities.shape
+            R1.append(activities[0].reshape(p*q, s))
+            R2.append(activities[8].reshape(p*q, s))
+
+            targets = np.load(exp_name+"_test_labels_"+str(i)+".npy")
+            _, p, q = targets.shape
+            T1.append(targets[target1].reshape(p*q, 1))
+            T2.append(targets[target2].reshape(p*q, 1))
 
     R1 = np.array(R1)
     T1 = np.array(T1).astype('i')

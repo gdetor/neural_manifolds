@@ -5,6 +5,8 @@ __pycache__/
 results/
 results_vit/
 data/
+convex_hull_results/
+tda_results/
 
 # C extensions
 *.so
