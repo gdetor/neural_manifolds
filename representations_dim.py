@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Change the following based on the problem
     # Choose a task: toy (circles/moons) or mnist
     data_type = "cifar"
-    n_type = "mlp"
+    n_type = "vit"
     # Load the parameters of the experiment
     if data_type in ["toy", "circles", "moons"]:
         with open("parameters.json") as f:
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         n_neurons=n_neurons,
                         epochs=epochs,
                         sparsity=sp,
-                        index=i)
+                        index=index)
 
                 if data_type == "cifar":
                     fname1 = exp_name+"_test_activities_"+str(i+1)+"_"+str(tgt1)+".npy"

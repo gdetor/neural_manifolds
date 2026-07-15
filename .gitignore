@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 results/
 results_vit/
+results_toy/
 data/
 convex_hull_results/
 tda_results/

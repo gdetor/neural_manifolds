@@ -257,12 +257,50 @@ for epoch in range(epochs):
     test_accuracy.append(accuracy / len(test_dataloader))
     test_loss.append(np.average(running_test_loss))
 
+if experiment_id == 1:
+    torch.save(net, exp_name+"model_parameters_"+str(experiment_id))
+
 train_loss = np.array(train_loss)
 np.save(exp_name+"_train_loss_"+str(experiment_id), train_loss)
 test_loss = np.array(test_loss)
 np.save(exp_name+"_test_loss_"+str(experiment_id), test_loss)
 test_accuracy = np.array(test_accuracy)
 np.save(exp_name+"_test_accuracy_"+str(experiment_id), test_accuracy)
+
+net.eval()
+hook = net.encoder.layers[-1].register_forward_hook(hook_fn)
+
+accuracyA = 0.0
+for x, y in testloaderA:
+    x = x.to(device)
+    y = y.to(device)
+
+    with torch.no_grad():
+        yhat = net(x)
+
+    loss = criterion(yhat, y)
+
+    prediction = yhat.argmax(dim=1)
+    accuracyA += prediction.eq(y).sum().item()
+
+accuracyB = 0.0
+for x, y in testloaderB:
+    x = x.to(device)
+    y = y.to(device)
+
+    with torch.no_grad():
+        yhat = net(x)
+
+    loss = criterion(yhat, y)
+
+    prediction = yhat.argmax(dim=1)
+    accuracyB += prediction.eq(y).sum().item()
+
+    hook.remove()
+
+accuracy = np.array([accuracyA/len(testloaderA),
+                     accuracyB/len(testloaderB)])
+np.savetxt(exp_name+"_post_accuracy_"+str(experiment_id), accuracy)
 print("*****************************************************************")
 
 # fig = plt.figure()

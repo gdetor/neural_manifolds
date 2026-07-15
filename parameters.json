@@ -1,8 +1,8 @@
 {
-    "n_type": "rnn",
+    "n_type": "mlp",
     "n_neurons": 100,
     "sparsity": 0.0,
-    "epochs": 10,
+    "epochs": 100,
     "lrate": 0.01,
     "alpha": 1.0,
     "n_experiments": 5,

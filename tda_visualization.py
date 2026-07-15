@@ -1,7 +1,9 @@
 import json
 import numpy as np
+import matplotlib
 import matplotlib.pylab as plt
 
+matplotlib.use('Agg')
 # np.random.seed(13)
 
 
@@ -92,8 +94,14 @@ for k, _ in enumerate(sparsity):
     for i in range(4):
         dist0, dist1 = [], []
         for j in range(n_experiments):
-            print(f"Case: {case[i]}, Experiment: {j}, dist = {bottle0[k, i, j]}")
-            print(f"Case: {case[i]}, Experiment: {j}, p-value = {pvals0[k, i, j]}")
+            print(" ")
+            print(f"Case H0: {case[i]}, Experiment: {j}, dist = {bottle0[k, i, j]}")
+            print(f"Case H0: {case[i]}, Experiment: {j}, p-value = {pvals0[k, i, j]}")
+
+            print(" ")
+            print(f"Case H1: {case[i]}, Experiment: {j}, dist = {bottle1[k, i, j]}")
+            print(f"Case H1: {case[i]}, Experiment: {j}, p-value = {pvals1[k, i, j]}")
+            print(" ")
             if pvals0[k, i, j] < 0.05:
                 if np.isfinite(bottle0[k, i, j]):
                     dist0.append(bottle0[k, i, j])
@@ -131,6 +139,6 @@ for k, _ in enumerate(sparsity):
                  weight="bold")
         ii += 1
 
-# plt.savefig(exp_type+"_"+n_type+".svg")
-# plt.savefig(exp_type+"_"+n_type+".pdf")
-plt.show()
+plt.savefig(exp_type+"_"+n_type+".svg")
+plt.savefig(exp_type+"_"+n_type+".pdf")
+# plt.show()
