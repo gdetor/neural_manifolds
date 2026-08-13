@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pylab as plt
 
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 # np.random.seed(13)
 
 
@@ -18,7 +18,7 @@ ccolor = ["#cecece",
 
 # **********************************************************************
 #       THE USER SHOULD SET THE FOLLOWING VALUES ACCORDINGLY
-exp_type = "cifar"
+exp_type = "mnist"
 if exp_type == "toy":
     with open("parameters.json") as f:
         params = json.load(f)
@@ -114,7 +114,7 @@ for k, _ in enumerate(sparsity):
         barPlot(dist1, ax2)
 
         ax1.text(4, 0.9, "$H_0$", fontsize=14)
-        ax1.set_ylim([0, 1.1])
+        # ax1.set_ylim([0, 1.1])
         ax1.set_title("Sparsity $p = $"+str(sparsity[k]), fontsize=14)
         ax1.set_xticks([])
         ax1.text(-1,
@@ -129,7 +129,7 @@ for k, _ in enumerate(sparsity):
                      rotation="vertical")
 
         ax2.text(4, 0.9, "$H_1$", fontsize=14)
-        ax2.set_ylim([0, 1.1])
+        # ax2.set_ylim([0, 1.1])
         ax2.set_xticks([-1, 1, 3, 5])
         ax2.set_xticklabels(labels, weight="bold", rotation=35)
         ax2.text(-1.,
@@ -139,6 +139,6 @@ for k, _ in enumerate(sparsity):
                  weight="bold")
         ii += 1
 
-plt.savefig(exp_type+"_"+n_type+".svg")
-plt.savefig(exp_type+"_"+n_type+".pdf")
-# plt.show()
+# plt.savefig(exp_type+"_"+n_type+".svg")
+# plt.savefig(exp_type+"_"+n_type+".pdf")
+plt.show()

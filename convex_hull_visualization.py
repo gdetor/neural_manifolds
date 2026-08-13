@@ -33,9 +33,10 @@ letters2 = ["C", "D"]
 # **********************************************************************
 #       THE USER SHOULD SET THE FOLLOWING VALUES ACCORDINGLY
 
-n_type = "vit"
+# n_type = "vit"
+n_type = "mlp"
 metric = "jaccard"
-task = "cifar"
+task = "mnist"
 dir_ = "./convex_hull_results/"
 
 with open("parameters.json") as f:

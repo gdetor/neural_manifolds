@@ -111,7 +111,7 @@ def parallel_permutation_test(sample1: np.ndarray,
 
 if __name__ == "__main__":
     # Choose a task: toy (circles/moons) or mnist
-    task = "cifar"
+    task = "mnist"
     # Load the parameters of the experiment
     if task == "toy":
         with open("parameters.json") as f:
@@ -140,8 +140,8 @@ if __name__ == "__main__":
     output_dir = "./tda_results/"
 
     # We test for the following connectivity sparsity conditions
-    # sparsity = [0.0, 0.3]
-    sparsity = [0.0]
+    sparsity = [0.0, 0.3]
+    # sparsity = [0.0]
 
     # --------------------------------------------------------------------
     # Initialize all the necesary Numpy arrays
