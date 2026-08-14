@@ -3,10 +3,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 from common import assignExperimentName
 
-matplotlib.use("Agg")
+# matplotlib.use("Agg")
 
 
-sparsity = [0.0, 0.3, 0.5, 0.8]
+# sparsity = [0.0, 0.3, 0.5, 0.8]
+sparsity = [0.0, 0.3]
 mode = ["sequential", "interleaved"]
 
 fig = plt.figure()
@@ -23,7 +24,7 @@ for k, m in enumerate(mode):
                                         mode=m,
                                         n_type="rnn",
                                         n_neurons=100,
-                                        epochs=50,
+                                        epochs=100,
                                         sparsity=sp,
                                         index=p)
             print(name)
@@ -39,3 +40,4 @@ ax1.set_title("Sequential")
 ax2.set_title("Interleaved")
 
 # plt.savefig("rnn_mnist.pdf")
+plt.show()
